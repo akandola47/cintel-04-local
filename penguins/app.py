@@ -7,14 +7,13 @@ import seaborn as sns
 from shiny import reactive, render, req
 
 # Use the built-in function to load the Palmer Penguins dataset
-penguins_df = palmerpenguins.load_penguins()
+penguins_df= palmerpenguins.load_penguins()
 
 # names the page
 ui.page_opts(title="arsh club penguin", fillable=True)
 
 # creates sidebar for user interaction
 with ui.sidebar(open="open"):
-    
     ui.h2("Sidebar")
     
     # Creates a dropdown input to choose a column 
@@ -52,67 +51,66 @@ with ui.sidebar(open="open"):
 # Creates a DataTable showing all data
 
 with ui.layout_columns():        
-    with ui.card():
-        "DataTable"
+    with ui.card(full_screen=True):
+        ui.h6("DataTable")
 
-    ui.h2("penguins")
 
     @render.data_frame
-    def render_penguins():
-        return penguins_df
-
+    def render_penguins_table():
+        return render.DataTable(penguins_df)
+        
 # Creates a DataGrid showing all data
 
-with ui.layout_columns():        
-    with ui.card():
-        "DataGrid"
+    with ui.card(full_screen=True):
+        ui.h6("DataGrid") 
 
-    ui.h2("penguins DataGrid")
-
-
-@render.data_frame
-def penguins_data():
-    return render.DataGrid(penguins_df, row_selection_mode="multiple") 
+    @render.data_frame
+    def penguins_Datagrid():
+        return render.DataGrid(penguins_df)
+        
 
 # Creates a Plotly Histogram showing all species
 
-with ui.card(full_screen=True):
-    ui.card_header("Plotly Histogram")
+    with ui.card(full_screen=True):
+        ui.card_header("Plotly Histogram")
     
-    @render_plotly
-    def plotly_histogram():
-        return px.histogram(
+        @render_plotly
+        def plotly_histogram():
+            return px.histogram(
             penguins_df, x=input.selected_attribute(), nbins=input.plotly_bin_count()
         )
 
 # Creates a Seaborn Histogram showing all species
 
-with ui.card(full_screen=True):
-    ui.card_header("Seaborn Histogram")
+    with ui.card(full_screen=True):
+        ui.card_header("Seaborn Histogram")
 
-    @render.plot(alt="Seaborn Histogram")
-    def seaborn_histogram():
-        histplot = sns.histplot(data=penguins_df, x="body_mass_g", bins=input.seaborn_bin_count())
-        histplot.set_title("arsh club penguins")
-        histplot.set_xlabel("Mass")
-        histplot.set_ylabel("Count")
-        return histplot
+        @render.plot(alt="Seaborn Histogram")
+        def seaborn_histogram():
+            histplot = sns.histplot(data=penguins_df, x="body_mass_g", bins=input.seaborn_bin_count())
+            histplot.set_title("arsh club penguins")
+            histplot.set_xlabel("Mass")
+            histplot.set_ylabel("Count")
+            return histplot
 
 # Creates a Plotly Scatterplot showing all species
 
-with ui.card(full_screen=True):
-    ui.card_header("Plotly Scatterplot: Species")
+    with ui.card(full_screen=True):
+        ui.card_header("Plotly Scatterplot: Species")
 
-    @render_plotly
-    def plotly_scatterplot():
-        return px.scatter(penguins_df,
-            x="bill_length_mm",
-            y="body_mass_g",
-            color="species",
-            title="penguins Plot",
-            labels={
+        @render_plotly
+        def plotly_scatterplot():
+            return px.scatter(penguins_df,
+                x="bill_length_mm",
+                y="body_mass_g",
+                color="species",
+                title="penguins Plot",
+                labels={
                 "bill_length_mm": "Bill Length (mm)",
                 "body_mass_g": "Body Mass (g)",
             },
-            size_max=4, 
         )
+@reactive.calc
+def filtered_data():
+    isSpeciesMatch = penguins_df["species"].isin(input.selected_species_list())
+    return penguins_df[isSpeciesMatch]
